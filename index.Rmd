@@ -12,6 +12,10 @@ _____
 
 # Univariate
 ### First Assignment 
+```{r}
+library(ggplot2)
+```
+
 
 ```{r}
 data_link = "https://github.com/qziegler/Visual-Analytics-Project/raw/master/data/dc_crime_tract_demo.csv"
@@ -41,19 +45,43 @@ head(census_violent)
 
 ### Box Plot - Final Plot
 
-
 ```{r}
-boxplot(census_violent$vcrate,horizontal = T,ylim=c(0,2500), xlab="Annual Violent Crime Rate by Census Tract", 
-        main="Violent Crime Rates in Washington DC",
-        sub="Washington DC Metropolitan Police Department",
-        adj=0,cex.sub=0.7,line = 4)
-text(x= 1500, y= 0.6, labels= "Outliers are Census Tracts with high violent crime rates",col='gray')
-text(x= 1500, y= 0.75, 
-     labels= NULL,
-     col='gray')
+bp = boxplot(census_violent$vcrate,horizontal = T,ylim=c(0,16000))
 ```
 
+```{r}
+bp$out
+census_violent <- census_violent[census_violent$vcrate < 15000,]
+outliers <- census_violent$CENSUS_TRACT[census_violent$vcrate %in% bp$out]
+outliers
+```
+
+```{r}
+boxVC = ggplot(census_violent, aes(y=vcrate, z="Test"))
+
+boxVC = boxVC + geom_boxplot() + coord_flip()
+
+box_title = "Washington, DC: In 2017, seven census tracts had an exceptionally high violent crime rate."
+box_caption = "Source: Washington, DC Metropolitan Police Department \n*The Census tract representing the National Mall is excluded from this plot"
+
+boxVC1 = boxVC + labs(title = box_title,
+                      y = "Annual Violent Crime Rate (Crimes per 100,000 residents)",
+                      caption = box_caption )
+
+boxVC2 = boxVC1 + theme(panel.background = element_rect(fill = "white", color = "grey50"),
+                        axis.title.x = element_text(size = 9, vjust = -1),
+                        axis.text.y = element_blank(),
+                        axis.ticks.y = element_blank(),
+                        plot.title = element_text(size = 11, face = "bold"),
+                        plot.caption = element_text(hjust = 0, vjust = -1))
 
 
+box_label = "Outliers are Census Tracts 5800, 7406, 7803, \n7804, 8803, 9603, and 10700"
+boxVC3 = boxVC2 + annotate("text", x = -0.1, y = 2600,
+                           label = box_label, 
+                           size = 3) +
+                  theme(axis.title.y = element_blank())
 
+boxVC3
+```
 
