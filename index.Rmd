@@ -1,0 +1,59 @@
+
+<br> 
+<center><img src="http://i.imgur.com/sSaOozN.png" width="500"></center>
+
+
+## Course: Visual Analytics for Policy and Management
+
+### Maria Zepeda Flores, Quinn Ziegler, and Joshua Jenkins 
+
+_____
+<a id='part1'></a>
+
+# Univariate
+### First Assignment 
+
+```{r}
+data_link = "https://github.com/qziegler/Visual-Analytics-Project/raw/master/data/dc_crime_tract_demo.csv"
+crimedf <- read.csv(data_link)
+```
+
+```{r}
+table(crimedf$OFFENSE, useNA = "always")
+violent_crimes <- c("ARSON", "ASSAULT W/DANGEROUS WEAPON", "HOMICIDE", "ROBBERY", "SEX ABUSE")
+
+crimedf$violent_crime <- ifelse(crimedf$OFFENSE %in% violent_crimes, 1, 0)
+
+census_pop <- aggregate(total_pop ~ CENSUS_TRACT, data = crimedf, mean)
+census_vc  <- aggregate(violent_crime ~ CENSUS_TRACT, data = crimedf, sum)
+
+census_violent <- merge(census_pop, census_vc, by="CENSUS_TRACT")
+
+census_violent$vcrate <- (census_violent$violent_crime/census_violent$total_pop)*100000
+head(census_violent)
+```
+
+
+### Original Plot
+
+<br> 
+<center><img src="https://i.imgur.com/JXObpmR.png" width="500"></center>
+
+### Box Plot - Final Plot
+
+
+```{r}
+boxplot(census_violent$vcrate,horizontal = T,ylim=c(0,2500), xlab="Annual Violent Crime Rate by Census Tract", 
+        main="Violent Crime Rates in Washington DC",
+        sub="Washington DC Metropolitan Police Department",
+        adj=0,cex.sub=0.7,line = 4)
+text(x= 1500, y= 0.6, labels= "Outliers are Census Tracts with high violent crime rates",col='gray')
+text(x= 1500, y= 0.75, 
+     labels= NULL,
+     col='gray')
+```
+
+
+
+
+
