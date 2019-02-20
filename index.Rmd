@@ -10,17 +10,23 @@
 _____
 <a id='part1'></a>
 
-# Univariate
-### First Assignment 
+# Bivariate
+### Second Assignment 
 ```{r}
 library(ggplot2)
+library(tidyverse)
 ```
 
 
 ```{r}
 data_link = "https://github.com/qziegler/Visual-Analytics-Project/raw/master/data/dc_crime_tract_demo.csv"
-crimedf <- read.csv(data_link)
+crimedf <- read.csv(data_link, stringsAsFactors = FALSE)
 ```
+
+```{r, echo=FALSE, results = 'hide'}
+head(crimedf)
+```
+
 
 ```{r}
 table(crimedf$OFFENSE, useNA = "always")
@@ -38,50 +44,42 @@ head(census_violent)
 ```
 
 
-### Original Plot
-
-<br> 
-<center><img src="https://i.imgur.com/JXObpmR.png" width="500"></center>
-
-### Box Plot - Final Plot
-
 ```{r}
-bp = boxplot(census_violent$vcrate,horizontal = T,ylim=c(0,16000))
+outliers <- c("5800", "7406", "7803", "7804", "8803", "9603", "10700")
+OutliersDF = crimedf[crimedf$CENSUS_TRACT %in% outliers & crimedf$violent_crime == 1,]
+OutliersDFGG2=OutliersDF[complete.cases(OutliersDF$CENSUS_TRACT) &complete.cases(OutliersDF$OFFENSE),]
+table(OutliersDFGG2$OFFENSE)
 ```
 
+
 ```{r}
-bp$out
-census_violent <- census_violent[census_violent$vcrate < 15000,]
-outliers <- census_violent$CENSUS_TRACT[census_violent$vcrate %in% bp$out]
-outliers
+CrimeType=table(OutliersDFGG2$CENSUS_TRACT, OutliersDFGG2$OFFENSE)%>%
+         prop.table(margin = 2)%>%   # 2 is % by column
+         "*"(100)%>%
+         round(3)
+df.T=as.data.frame(CrimeType)
+head(df.T)
+names(df.T)=c('CensusTract','Offense','Percent') #renaming
+head(df.T)
 ```
 
+### Heat Map - Final Plot
+
 ```{r}
-boxVC = ggplot(census_violent, aes(y=vcrate, z="Test"))
+base  = ggplot(df.T, aes(x = CensusTract, y = Offense, fill = Percent)) 
+heat1 = base +  geom_tile() 
+heat2 = heat1 +scale_fill_gradient(low = "white", 
+                                   high = "black")
+heat3 = heat2 + theme_classic() 
 
-boxVC = boxVC + geom_boxplot() + coord_flip()
+heat4 = heat3 + theme(axis.text.x = element_text(angle = 0, vjust = 0.6), 
+                      legend.title = element_blank(), #no title for legend
+                      legend.position="right", 
+                      legend.direction="vertical",
+                      legend.key.width=unit(1, "cm"),
+                      legend.key.height=unit(1, "cm")) 
 
-box_title = "Washington, DC: In 2017, seven census tracts had an exceptionally high violent crime rate."
-box_caption = "Source: Washington, DC Metropolitan Police Department \n*The Census tract representing the National Mall is excluded from this plot"
-
-boxVC1 = boxVC + labs(title = box_title,
-                      y = "Annual Violent Crime Rate (Crimes per 100,000 residents)",
-                      caption = box_caption )
-
-boxVC2 = boxVC1 + theme(panel.background = element_rect(fill = "white", color = "grey50"),
-                        axis.title.x = element_text(size = 9, vjust = -1),
-                        axis.text.y = element_blank(),
-                        axis.ticks.y = element_blank(),
-                        plot.title = element_text(size = 11, face = "bold"),
-                        plot.caption = element_text(hjust = 0, vjust = -1))
-
-
-box_label = "Outliers are Census Tracts 5800, 7406, 7803, \n7804, 8803, 9603, and 10700"
-boxVC3 = boxVC2 + annotate("text", x = -0.1, y = 2600,
-                           label = box_label, 
-                           size = 3) +
-                  theme(axis.title.y = element_blank())
-
-boxVC3
+heat4 + labs(title = "In census tracts with highest rates of violent crimes,\nwhich violent crimes are most common?", y="Type of Violent Crime", x="Census Tract", caption= "Source: Washington, DC Metropolitan Police Department") + theme(plot.title = element_text(face="bold", size=16, hjust=.5), plot.subtitle = element_text(size = 14, hjust = 1), plot.caption = element_text(hjust = 0, vjust = -1), 
+)
 ```
 
